@@ -1,0 +1,24 @@
+{
+  "name": "@pfalkowski/theme-switch",
+  "version": "1.0.0",
+  "description": "A dependency-free light/auto/dark <theme-switch> custom element with click, drag, and swipe support.",
+  "main": "theme-switch.js",
+  "module": "theme-switch.js",
+  "type": "module",
+  "files": [
+    "theme-switch.js"
+  ],
+  "keywords": [
+    "web-component",
+    "custom-element",
+    "theme",
+    "dark-mode",
+    "toggle"
+  ],
+  "author": "Piotr Falkowski",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PFalkowski/theme-switch.git"
+  }
+}

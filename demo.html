@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>theme-switch demo</title>
+<script>
+(function () {
+  var saved = null;
+  try { saved = localStorage.getItem('theme'); } catch (e) {}
+  if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f4f3f8;
+    --surface: #ffffff;
+    --line-2: #d3cfe0;
+    --ink: #1b1a20;
+    --muted: #6d6a7a;
+    --accent: #6750a4;
+    --accent-ink: #ffffff;
+    --accent-ink-on-dark: #14121b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #100f14; --surface: #1a1920; --line-2: #3a3747;
+      --ink: #eae6f2; --muted: #9995a6; --accent: #9a7ae0;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #100f14; --surface: #1a1920; --line-2: #3a3747;
+    --ink: #eae6f2; --muted: #9995a6; --accent: #9a7ae0;
+  }
+  body {
+    margin: 0; padding: 40px 20px; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p { color: var(--muted); margin: 0 0 12px; font-size: 14px; }
+  .row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px;
+    padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  code { background: var(--surface); border: 1px solid var(--line-2); border-radius: 4px; padding: 2px 6px; }
+  /* Second card: a site with a different palette entirely, to prove the token contract. */
+  .alt {
+    --surface: #0b3d2e; --line-2: #1f6b4f; --accent: #ffb703; --muted: #9fd8c1; --accent-ink-on-dark: #101010;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>theme-switch</h1>
+    <p>Click, drag, swipe, or use the arrow keys once a segment is focused.</p>
+  </div>
+
+  <div class="card">
+    <span>Default palette (matches stock-today.com)</span>
+    <theme-switch></theme-switch>
+  </div>
+
+  <div class="card alt">
+    <span style="color:#eafff5">Host page defining its own tokens</span>
+    <theme-switch></theme-switch>
+  </div>
+</div>
+<script type="module" src="./theme-switch.js"></script>
+</body>
+</html>

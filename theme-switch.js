@@ -122,6 +122,19 @@ class ThemeSwitch extends HTMLElement {
       const attr = this.getAttribute('value');
       if (attr === 'light' || attr === 'dark' || attr === 'auto') initial = attr;
     }
+    // Localization: the icons for Light/Dark are language-neutral by design,
+    // but their accessible names, the group's own label, and Auto's visible
+    // text are not. Read once at connect — this is a static page per
+    // locale, never a live language switch inside one loaded instance.
+    const groupLabel = this.getAttribute('group-label');
+    if (groupLabel) this._switch.setAttribute('aria-label', groupLabel);
+    this._options.forEach((opt) => {
+      const override = this.getAttribute('label-' + opt.dataset.value);
+      if (!override) return;
+      opt.setAttribute('aria-label', override);
+      if (opt.dataset.value === 'auto') opt.textContent = override;
+    });
+
     this._apply(initial, false);
 
     this._options.forEach((opt, index) => {

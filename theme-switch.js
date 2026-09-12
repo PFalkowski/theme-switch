@@ -87,8 +87,6 @@ TEMPLATE.innerHTML = `
 `;
 
 class ThemeSwitch extends HTMLElement {
-  static get observedAttributes() { return ['storage-key']; }
-
   constructor() {
     super();
     this.attachShadow({ mode: 'open' }).appendChild(TEMPLATE.content.cloneNode(true));
@@ -104,10 +102,27 @@ class ThemeSwitch extends HTMLElement {
 
   get storageKey() { return this.getAttribute('storage-key') || 'theme'; }
 
+  /**
+   * true (default): the element owns data-theme on <html> and localStorage
+   * itself — the plug-and-play mode. false: the element only draws itself
+   * and fires events; a host with its own theme bootstrap (e.g. one that
+   * also needs to track the OS live to update a <meta name="theme-color">)
+   * stays the sole writer of the DOM and storage, and drives this element's
+   * initial and OS-driven visual state through `.render()` instead.
+   */
+  get managesDom() { return this.getAttribute('manage-dom') !== 'false'; }
+
   connectedCallback() {
-    let saved = null;
-    try { saved = window.localStorage.getItem(this.storageKey); } catch (e) { /* storage may be blocked */ }
-    this._apply(saved === 'light' || saved === 'dark' ? saved : 'auto', false);
+    let initial = 'auto';
+    if (this.managesDom) {
+      let saved = null;
+      try { saved = window.localStorage.getItem(this.storageKey); } catch (e) { /* storage may be blocked */ }
+      if (saved === 'light' || saved === 'dark' || saved === 'auto') initial = saved;
+    } else {
+      const attr = this.getAttribute('value');
+      if (attr === 'light' || attr === 'dark' || attr === 'auto') initial = attr;
+    }
+    this._apply(initial, false);
 
     this._options.forEach((opt, index) => {
       opt.addEventListener('click', () => this._apply(opt.dataset.value, true));
@@ -181,15 +196,10 @@ class ThemeSwitch extends HTMLElement {
     return this._options[index].dataset.value;
   }
 
-  /** @param {'light'|'auto'|'dark'} value */
-  _apply(value, persist) {
+  /** Paint the pill for a choice — no DOM write on the page, no persistence, no events. */
+  _paint(value) {
     const resolved = value === 'dark' || (value === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
       ? 'dark' : 'light';
-    if (value === 'light' || value === 'dark') {
-      document.documentElement.setAttribute('data-theme', value);
-    } else {
-      document.documentElement.removeAttribute('data-theme');
-    }
     this.setAttribute('data-resolved', resolved);
     this._switch.setAttribute('data-active', value);
     this._options.forEach((opt) => {
@@ -197,8 +207,20 @@ class ThemeSwitch extends HTMLElement {
       opt.setAttribute('aria-checked', isActive ? 'true' : 'false');
       opt.tabIndex = isActive ? 0 : -1;
     });
-    if (persist) {
-      try { window.localStorage.setItem(this.storageKey, value); } catch (e) { /* storage may be blocked */ }
+  }
+
+  /** @param {'light'|'auto'|'dark'} value */
+  _apply(value, persist) {
+    this._paint(value);
+    if (this.managesDom) {
+      if (value === 'light' || value === 'dark') {
+        document.documentElement.setAttribute('data-theme', value);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      if (persist) {
+        try { window.localStorage.setItem(this.storageKey, value); } catch (e) { /* storage may be blocked */ }
+      }
     }
     this.dispatchEvent(new CustomEvent('change', { detail: { value }, bubbles: true }));
     document.dispatchEvent(new CustomEvent('themechange', { detail: { value } }));
@@ -210,6 +232,17 @@ class ThemeSwitch extends HTMLElement {
   /** Set the current choice and persist it, same as a click would. */
   set value(next) {
     if (next === 'light' || next === 'auto' || next === 'dark') this._apply(next, true);
+  }
+
+  /**
+   * Repaint to reflect a choice a host with manage-dom="false" already
+   * applied itself (e.g. its own OS-change listener resolved "auto" to a
+   * new concrete theme). Pure visual sync: no DOM write, no persistence,
+   * no events — safe to call from inside that host's own apply function
+   * without looping back into it.
+   */
+  render(value) {
+    if (value === 'light' || value === 'auto' || value === 'dark') this._paint(value);
   }
 }
 

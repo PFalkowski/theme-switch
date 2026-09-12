@@ -66,7 +66,10 @@ values below are only the fallback used when none are defined:
 | | |
 |---|---|
 | `storage-key` attribute | `localStorage` key to persist under. Default `theme`. Give each embedding site its own if they must not share a choice — they usually don't need to, since `localStorage` is already scoped per origin. |
-| `.value` property (get/set) | Current choice, one of `"light"`, `"auto"`, `"dark"`. Setting it applies and persists the change, same as a click. |
+| `manage-dom="false"` attribute | Opts out of the plug-and-play behavior: the element stops writing `data-theme` on `<html>` and stops touching `localStorage` itself. Use this when the host page already has its own bootstrap script — for example one that also needs to track the OS live to keep a `<meta name="theme-color">` in sync — and must stay the single writer of both. The element still draws itself and fires events; the host drives it via `value`/`render()` instead. |
+| `value` attribute (initial only) | With `manage-dom="false"`, sets the element's starting visual state — read once, on connect. Ignored otherwise (the saved `localStorage` value wins instead). |
+| `.value` property (get/set) | Current choice, one of `"light"`, `"auto"`, `"dark"`. Setting it applies and — when `manage-dom` is not `"false"` — persists the change, same as a click. |
+| `.render(value)` method | Repaints to reflect a choice the host already applied itself (e.g. its own OS-change listener just resolved "auto" to a new concrete theme). Pure visual sync: no DOM write, no persistence, no events — safe to call from inside that host's own apply logic without looping back into it. |
 | `change` event | Fires on the element. `event.detail.value` is the new choice. |
 | `themechange` event | Fires on `document`, same detail — for a page whose own logic already listens for this (stock-today.com's did, before this component replaced it). |
 
